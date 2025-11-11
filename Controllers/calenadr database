@@ -1,0 +1,9 @@
+CREATE TABLE BookingTable (
+    BookingID INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    DateRanges NVARCHAR(MAX) NOT NULL
+);
+INSERT INTO BookingTable (Name, DateRanges)
+VALUES 
+('Shruti Palekar', '2025-11-14~2025-11-15|2025-11-22~2025-11-22'),
+('Amit Sharma', '2025-11-21~2025-11-23');
