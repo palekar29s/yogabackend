@@ -33,7 +33,6 @@ namespace yogabackend
 
 
 
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -45,6 +44,12 @@ namespace yogabackend
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "yogabackend v1");
                     c.RoutePrefix = "swagger";
                 });
+
+                app.UseCors(x => x
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+
             }
 
             app.UseHttpsRedirection();
