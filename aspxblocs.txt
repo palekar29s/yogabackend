@@ -1,0 +1,239 @@
+using AdminClasses;
+using System;
+using System.Data;
+using System.Linq;
+using System.ServiceModel.Configuration;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Web.UI;
+
+public partial class Blogs_Blog_Details : System.Web.UI.Page
+{
+    public String countrycode = "IN";
+    public String CnvtCurrency = "INR";
+    LoginDetail oLoginDetail = new LoginDetail();
+    blog oblog = new blog();
+    public string cDate = "{today’s date}";
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        //////////login detail extracting here for through out on page use
+        if (Session["LoginDetailList"] != null)
+        { oLoginDetail = (LoginDetail)Session["LoginDetailList"]; }
+        else
+        {
+            Boolean IsSessionDone = LoginSession.GetLoginResult("", "", "", "", "", "SWISSTOURS");
+            if (!IsSessionDone)
+                Response.Redirect("/default.aspx", true);
+            else
+                oLoginDetail = (LoginDetail)Session["LoginDetailList"];
+
+        }
+
+        if (!string.IsNullOrEmpty(oLoginDetail.UrlCountry))
+        {
+            var regexItem = new Regex("^[A-Z]*$");
+            if (regexItem.IsMatch(Convert.ToString(oLoginDetail.UrlCountry)))
+            {
+                countrycode = Convert.ToString(oLoginDetail.UrlCountry);
+                CnvtCurrency = CountryToCurrency.GetCountryToCurrency(countrycode);
+            }
+            else
+            {
+                throw new Exception("cntry is Not Valid");
+            }
+        }
+        else
+        {
+            throw new Exception("cntry is Not Valid");
+        }
+
+        if (Request.Path.Any(char.IsUpper))
+        {
+            Response.Status = "301 Moved Permanently";
+            Response.AddHeader("Location", Request.Path.ToLower());
+        }
+
+        if (!IsPostBack)
+        {
+            DataTable dtBlogAll = new DataTable();
+            DataTable dtBlog = new DataTable();
+            DataTable dtBlogRest = new DataTable();
+            dtBlogAll = oblog.Get_BlogLsit_for_Condition();
+
+            #region Get ROE Data
+            DataTable dt = new AdminClasses.blog().Get_ROEblog();
+            ReoBlog.DataSource = dt;
+            ReoBlog.DataBind();
+            #endregion
+
+            //need to comment below code before going live and making active this code will show only on test site
+            //DataTable dtBlogExtra = new DataTable();
+            //dtBlogExtra = new EurailClasses.Eurail().Dynamic_Query_For_SQL("exec Get_BlogLsitExtra_for_Condition 32");
+            //dtBlogAll.Merge(dtBlogExtra);
+
+            if (dtBlogAll.Rows.Count > 0)
+            {
+                string[] subTitle = Convert.ToString(Request.Path).Split('/');
+                if (subTitle.Length > 0)
+                {
+                    string swCode = Convert.ToString(subTitle[subTitle.Length - 1]).ToLower();
+                    dtBlogRest = dtBlogAll.Select("subTitle<>'" + swCode + "'").CopyToDataTable();
+                    dtBlog = dtBlogAll.Select("subTitle='" + swCode + "'").CopyToDataTable();
+                    if (dtBlog.Rows.Count > 0)
+                        Get_BlogDetails(dtBlog, swCode.Replace("-", "_"));
+                    if (dtBlogRest.Rows.Count > 0)
+                        Get_BlogLsit(dtBlogRest);
+                }
+            }
+        }
+    }
+    public void Get_BlogDetails(DataTable dtBlog, string swCode)
+    {
+        Page.Title = Convert.ToString(dtBlog.Rows[0]["PageTitle"]);
+        Page.MetaDescription = Convert.ToString(dtBlog.Rows[0]["MetaDescription"]);
+        blogTitle.InnerHtml = Convert.ToString(dtBlog.Rows[0]["Title"]);
+        //blogPostDate.InnerHtml = Convert.ToString(dtBlog.Rows[0]["PostDate"]);
+        imgBanner.Alt = Convert.ToString(dtBlog.Rows[0]["ImgAlt"]);
+        imgBanner.Src = "/images/blog/" + Convert.ToString(dtBlog.Rows[0]["BannerImage"]);
+
+        if (true)
+        {
+            switch (swCode)
+            {
+                case "places_to_visit_in_switzerland_by_train": divplaces_to_visit_in_switzerland_by_train.Visible = true; divarticleplaces_to_visit_in_switzerland_by_train.Visible = true; break;
+                case "make_a_memorable_europe_vacation_tour": divmake_a_memorable_europe_vacation_tour.Visible = true; divarticlemake_a_memorable_europe_vacation_tour.Visible = true; break;
+                case "switzerland_itinerary_8_days": divswitzerland_itinerary_8_days.Visible = true; divarticleswitzerland_itinerary_8_days.Visible = true; break;
+                case "10_things_to_do_in_switzerland": div10_things_to_do_in_switzerland.Visible = true; div10_articlethings_to_do_in_switzerland.Visible = true; break;
+                case "10_ultimate_benefits_of_swiss_travel_pass": div10_ultimate_benefits_of_swiss_travel_pass.Visible = true; div10_articleultimate_benefits_of_swiss_travel_pass.Visible = true; break;
+                case "top_discounts_on_swiss_travel_pass": divtop_discounts_on_swiss_travel_pass.Visible = true; divarticletop_discounts_on_swiss_travel_pass.Visible = true; break;
+                case "5_nights_6_days_switzerland_itinerary_holiday_tour": div5_nights_6_days_switzerland_itinerary_holiday_tour.Visible = true; divarticle5_nights_6_days_switzerland_itinerary_holiday_tour.Visible = true; break;
+                case "10_best_romantic_places_for_honeymoon_in_switzerland": div10_best_romantic_places_for_honeymoon_in_switzerland.Visible = true; divarticle10_best_romantic_places_for_honeymoon_in_switzerland.Visible = true; break;
+                case "10_reason_to_visit_things_to_do_in_switzerland_in_winter": div10_reason_to_visit_things_to_do_in_switzerland_in_winter.Visible = true; divarticle10_reason_to_visit_things_to_do_in_switzerland_in_winter.Visible = true; break;
+                case "foods_and_drinks_to_try_in_switzerland": divfoods_and_drinks_to_try_in_switzerland.Visible = true; divarticlefoods_and_drinks_to_try_in_switzerland.Visible = true; break;
+                case "things_to_do_in_zurich": divthings_to_do_in_zurich.Visible = true; divarticlethings_to_do_in_zurich.Visible = true; break;
+                case "things_to_do_in_interlaken": divthings_to_do_in_interlaken.Visible = true; divarticlethings_to_do_in_interlaken.Visible = true; break;
+                case "10_things_to_do_in_lucerne_switzerland": div10_things_to_do_in_lucerne_switzerland.Visible = true; break;
+                case "10_things_to_do_in_switzerland_in_summer": div10_things_to_do_in_switzerland_in_summer.Visible = true; break;
+                case "11_things_to_do_in_zermatt": div11_things_to_do_in_zermatt.Visible = true; break;
+                case "is_swiss_travel_pass_worth_it": divis_swiss_travel_pass_worth_it.Visible = true; divarticleis_swiss_travel_pass_worth_it.Visible = true; break;
+                case "switzerland_itinerary_9_days": divswitzerland_itinerary_9_days.Visible = true; divarticleswitzerland_itinerary_9_days.Visible = true; break;
+                case "switzerland_itinerary_3_days": divswitzerland_itinerary_3_days.Visible = true; divarticleswitzerland_itinerary_3_days.Visible = true; break;
+                case "switzerland_itinerary_5_days": divswitzerland_itinerary_5_days.Visible = true; divarticleswitzerland_itinerary_5_days.Visible = true; break;
+                case "switzerland_itinerary_6_days": divswitzerland_itinerary_6_days.Visible = true; divarticleswitzerland_itinerary_6_days.Visible = true; break;
+                case "switzerland_itinerary_10_days": divSwitzerland_Itinerary_10_days.Visible = true; divarticleSwitzerland_Itinerary_10_days.Visible = true; break;
+                case "titlis_summer_activities": divtitlis_summer_activities.Visible = true; divarticletitlis_summer_activities.Visible = true; break;
+                case "budget_trip_to_switzerland": divbudget_trip_to_switzerland.Visible = true; divarticlebudget_trip_to_switzerland.Visible = true; break;
+                case "interlaken_switzerland": div_interlaken_switzerland.Visible = true; divarticle_interlaken_switzerland.Visible = true; break;
+                case "zermatt_switzerland": div_zermatt_switzerland.Visible = true; divarticle_zermatt_switzerland.Visible = true; break;
+                case "zurich_switzerland": div_zurich_switzerland.Visible = true; divarticle_zurich_switzerland.Visible = true; break;
+                case "bernina_express": div_bernina_express.Visible = true; divarticle_bernina_express.Visible = true; break;
+                case "switzerland_7_days_itinerary": div_switzerland_7_days_itinerary.Visible = true; divarticle_switzerland_7_days_itinerary.Visible = true; break;
+                case "4_days_switzerland_in_itinerary": div_4_days_Switzerland_in_itinerary.Visible = true; divarticle_4_days_Switzerland_in_itinerary.Visible = true; break;
+                case "jungfraujoch_switzerland": div_jungfraujoch_switzerland.Visible = true; divarticle_jungfraujoch_switzerland.Visible = true; break;
+                case "souvenirs_and_gifts_in_switzerland": div_souvenirs_and_gifts_in_switzerland.Visible = true; divarticle_souvenirs_and_gifts_in_switzerland.Visible = true; break;
+                case "lucerne_switzerland": div_lucerne_switzerland.Visible = true; divarticle_lucerne_switzerland.Visible = true; break;
+                case "montreux_switzerland": div_montreux_switzerland.Visible = true; divarticle_montreux_switzerland.Visible = true; break;
+                case "best_waterfalls_in_switzerland": div_best_waterfalls_in_switzerland.Visible = true; divarticle_best_waterfalls_in_switzerland.Visible = true; break;
+                case "saint_moritz_switzerland": div_saint_moritz_switzerland.Visible = true; divarticle_saint_moritz_switzerland.Visible = true; break;
+                case "11_days_in_switzerland": div_11_days_in_switzerland.Visible = true; divarticle_11_days_in_switzerland.Visible = true; break;
+                case "basel_switzerland": div_basel_switzerland.Visible = true; divarticle_basel_switzerland.Visible = true; break;
+                case "paris_and_switzerland_itinerary": div_paris_and_switzerland_itinerary.Visible = true; divarticle_paris_and_switzerland_itinerary.Visible = true; break;
+                case "switzerland_itinerary_from_singapore":
+                    div_switzerland_itinerary_from_singapore.Visible = true; divarticle_switzerland_itinerary_from_singapore.Visible= true; break;
+                case "places_in_switzerland_for_tourists":
+                    div_places_in_switzerland_for_tourists.Visible = true; divarticle_places_in_switzerland_for_tourists.Visible= true; break;
+                case "lauterbrunnen_switzerland":
+                    div_lauterbrunnen_switzerland.Visible = true; divarticle_lauterbrunnen_switzerland.Visible= true; break;
+                case "paris_and_switzerland_itinerary_7_days":
+                    div_paris_and_switzerland_itinerary_7_days.Visible = true; divarticle_paris_and_switzerland_itinerary_7_days.Visible= true; break;
+                case "12_days_switzerland_itinerary":
+                    div_12_days_switzerland_itinerary.Visible = true; divarticle_12_days_switzerland_itinerary.Visible = true; break;
+                case "switzerland_itinerary_from_zurich":
+                    div_switzerland_Itinerary_from_zurich.Visible = true; divarticle_switzerland_Itinerary_from_zurich.Visible = true; break;
+                case "what_is_a_swiss_travel_pass":
+                    div_what_is_a_swiss_travel_pass.Visible = true; divarticle_what_is_a_swiss_travel_pass.Visible = true; break;
+                case "eurail_pass_vs_swiss_travel_pass":
+                    div_eurail_pass_vs_swiss_travel_pass.Visible = true; divarticle_eurail_pass_vs_swiss_travel_pass.Visible = true;
+                    break;
+                case "most_scenic_train_rides_in_switzerland":
+                    div_most_scenic_train_rides_in_switzerland.Visible = true; divarticle_most_scenic_train_rides_in_switzerland.Visible = true; break;
+                case "top_activities_in_switzerland":
+                    div_top_activities_in_switzerland.Visible = true; divarticle_top_activities_in_switzerland.Visible = true;
+                    break;
+                case "adventure_activities_in_switzerland":
+                    div_adventure_activities_in_switzerland.Visible = true; divarticle_adventure_activities_in_switzerland.Visible = true;
+                    break;
+                case "swiss_travel_pass_first_class_vs_second_class":
+                    div_swiss_travel_pass_first_class_vs_second_class.Visible = true; divarticle_swiss_travel_pass_first_class_vs_second_class.Visible = true;
+                    break;
+                case "switzerland_how_many_days":
+                    div_switzerland_how_many_days.Visible = true; divarticle_switzerland_how_many_days.Visible = true;
+                    break;
+                case "switzerland_trip_cost":
+                    div_switzerland_trip_cost.Visible = true; divarticle_switzerland_trip_cost.Visible = true;
+                    break;
+                case "free_museums_with_swiss_travel_pass":
+                    div_free_museums_with_swiss_travel_pass.Visible = true; divarticle_free_museums_with_swiss_travel_pass.Visible = true;
+                    break;
+                case "hidden_gems_with_swiss_travel_pass":
+                    div_hidden_gems_with_swiss_travel_pass.Visible = true; divarticle_hidden_gems_with_swiss_travel_pass.Visible = true;
+                    break;
+               
+                case "mountains_of_switzerland":
+                    div_mountains_of_switzerland.Visible = true; divarticle_mountains_of_switzerland.Visible = true;
+                    break;
+
+                case "swiss_travel_pass_vs_half_fare_card":
+                    div_swiss_travel_pass_vs_half_fare_card.Visible = true; 
+                    divarticle_swiss_travel_pass_vs_half_fare_card.Visible = true;
+                    break;
+
+                case "swiss_travel_pass_guide_2025":
+                    div_swiss_travel_pass_guide_2025.Visible = true;
+                    divarticle_swiss_travel_pass_guide_2025.Visible = true;
+                    break;
+
+                case "where_to_buy_swiss_travel_pass":
+                    div_where_to_buy_swiss_travel_pass.Visible = true;
+                    divarticle_where_to_buy_swiss_travel_pass.Visible = true;
+                    break;
+
+                case "switzerland_tourism":
+                    divarticleSwitzerland_tourism.Visible = true;
+                    cDate = Convert.ToDateTime(oLoginDetail.ServerCurrentDate).ToString("dd MMM yyyy");
+                    divSwitzerland_tourism.Visible = true;
+                    break;
+            }
+
+        }
+    }
+    public void Get_BlogLsit(DataTable dtBlog)
+    {
+        DataView dvBlog = new DataView(dtBlog);
+        dvBlog.Sort = "SequenceNo desc";
+        dtBlog = dvBlog.ToTable();
+        if (dtBlog.Rows.Count > 0)
+        {
+            StringBuilder strHtml = new StringBuilder();
+            for (int i = 0; i < dtBlog.Rows.Count; i++)
+            {
+                strHtml.Append("<div>");
+                strHtml.Append("<div class=\"blogBox fade_anim\">");
+                strHtml.Append("<div class=\"blogImg\"><img alt='" + Convert.ToString(dtBlog.Rows[i]["ImgAlt"]) + "' src=\"/images/blog/" + Convert.ToString(dtBlog.Rows[i]["BoxImage"]) + "\"  /></div>");
+                strHtml.Append("<div class=\"blogIntro\">");
+                strHtml.Append("<div class=\"blogDate text-uppercase\">" + Convert.ToString(dtBlog.Rows[i]["PostDate"]) + "</div>");
+                strHtml.Append("<h4 class=\"red_txt text-uppercase\">" + Convert.ToString(dtBlog.Rows[i]["Title"]) + "</h4>");
+                strHtml.Append("<p>" + Convert.ToString(dtBlog.Rows[i]["ShortDescription"]) + "</p>");
+                // strHtml.Append("<a href = \"" + Convert.ToString(dtBlog.Rows[i]["SubTitle"])+"?BIds="+ Convert.ToString(dtBlog.Rows[i]["Id"]) + "&cntry=" + countrycode + "\" class=\"cta btn\">Read More</a>");
+                strHtml.Append("<a href = \"" + Convert.ToString(dtBlog.Rows[i]["SubTitle"]) + "\" class=\"cta btn\">Read More</a>");
+                //strHtml.Append("<a href =\"" + Convert.ToString(dtBlog.Rows[i]["SubTitle"]) + "\" class=\"cta btn\">Read More</a>");
+                strHtml.Append("</div>");
+                strHtml.Append("</div>");
+                strHtml.Append("</div>");
+            }
+            strHtml.Append("<div class=\"clearfix\"></div>");
+            //divBlogList.InnerHtml = Convert.ToString(strHtml);
+        }
+
+    }
+} this is the aspx.cs 
